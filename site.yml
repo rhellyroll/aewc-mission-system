@@ -1,0 +1,7 @@
+---
+
+- name: AEW&C A1 - Ground Mission Station Baseline
+  hosts: aewc_gms
+  become: yes
+  roles: 
+    - baseline

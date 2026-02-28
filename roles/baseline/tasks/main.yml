@@ -1,0 +1,58 @@
+---
+
+- name: Set hostname
+  hostname:
+    name: aewc-gms-01
+
+- name: Set SELinux to enforcing
+  selinux:
+    policy: targeted
+    state: enforcing
+
+- name: Install nftables
+  dnf: 
+    name: nftables
+    state: present
+
+- name: Enable nftables
+  service: 
+    name: nftables
+    state: started
+    enabled: yes
+  changed_when: false
+
+- name: Set firewalld default zone to drop
+  ansible.posix.firewalld:
+    zone: drop
+    state: enabled
+    permanent: yes
+
+- name: Add internal zone source subnet
+  ansible.posix.firewalld:
+    zone: internal 
+    source: 192.168.10.0/24
+    permanent: yes
+    state: enabled
+
+- name: Allow SSH on internal zone
+  ansible.posix.firewalld:
+    zone: internal
+    service: ssh
+    permanent: yes
+    state: enabled
+
+- name: Allow AEW&C mission ports
+  ansible.posix.firewalld:
+    zone: internal
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    - "5000/tcp"
+    - "5001/udp"
+
+- name: Reload firewalld
+  service: 
+    name: firewalld
+    state: reloaded
+  changed_when: false
