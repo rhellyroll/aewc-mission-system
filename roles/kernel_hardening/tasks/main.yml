@@ -1,0 +1,31 @@
+---
+
+- name: Install OpenSCAP tools
+  ansible.builtin.dnf:
+    name:
+      - openscap-scanner
+      - scap-security-guide
+    state: present
+
+- name: Deploy oscap scan script
+  ansible.builtin.copy:
+    dest: /usr/local/bin/run-oscap.sh
+    mode: '0775'
+    content: |
+      #!/bin/bash
+      oscap xccdf eval --profile
+      xccdf_org.ssgproject.content_profile_stig --results /tmp/scan.xml /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml 2>&1 | tail -30
+
+- name: Apply sysctl kernel hardening
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: no
+  loop:
+    - { key: "kernel.randomize_va_space", value: "2" }
+    - { key: "net.ipv4.conf.all.send_redirects", value: "0" }
+    - { key: "net.ipv4.conf.default.send_redirects", value: "0" }
+    - { key: "kernel.dmesg_restrict", value: "1" }
+    - { key: "fs.suid_dumpable", value: "0" }
+    - { key: "net.ipv4.ip_forward", value: "0" }
