@@ -1,0 +1,26 @@
+---
+
+- name: Install auditd on log server
+  ansible.builtin.dnf:
+    name: audit
+    state: present
+
+- name: Configure auditd to listen for remote logs
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^tcp_listen_port'
+    line: 'tcp_listen_port = 60'
+  notify: restart auditd
+
+- name: Enable and start audit on log server
+  ansible.builtin.service:
+    name: auditd
+    enabled: yes
+    state: started
+
+- name: Open firewall port 60 for audit logs
+  ansible.posix.firewalld:
+    port: 60/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes 

@@ -1,0 +1,19 @@
+---
+
+- name: Deploy audit watch rules
+  ansible.builtin.copy:
+    dest: /etc/audit/rules.d/aewc.rules
+    content: |
+      -w /etc/passwd -p wa -k identity 
+      -w /etc/shadow -p wa -k identity
+      -w /etc/sudoers -p wa -k sudoers
+      -w /etc/sudoers.d/ -p wa -k sudoers
+    owner: root
+    group: root
+    mode: '0640'
+  notify: reload auditd rules
+
+- name: Load audit rules immediately
+  ansible.builtin.command:
+    cmd: augenrules --load
+  become: yes

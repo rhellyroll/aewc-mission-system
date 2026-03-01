@@ -1,0 +1,6 @@
+---
+
+- name: restart auditd
+  ansible.builtin.command:
+    cmd: service auditd restart
+  become: yes

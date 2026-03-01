@@ -7,3 +7,10 @@
     - baseline
     - kernel_hardening
     - luks_encryption
+    - auditd_logging
+
+- name: AEWC Mission System - Log Server
+  hosts: log_servers
+  become: yes
+  roles:
+    - log_server

@@ -1,0 +1,41 @@
+---
+
+- name: Install auditd and audisp-remote
+  ansible.builtin.dnf:
+    name: 
+      - audit 
+      - audispd-plugins
+    state: present
+
+- name: Enable and start auditd
+  ansible.builtin.service:
+    name: auditd
+    enabled: yes
+    state: started
+
+- name: Configure audisp-remote to forward logs
+  ansible.builtin.template: 
+    src: audisp-remote.conf.j2
+    dest: /etc/audit/plugins.d/au-remote.conf
+    owner: root
+    group: root
+    mode: '0640'
+  notify: restart auditd
+
+- name: Set remote log server in auditd
+  ansible.builtin.lineinfile:
+    path: /etc/audit/audisp-remote.conf
+    regexp: '^remote_server'
+    line: 'remote_server = 192.168.10.20'
+  notify: restart auditd
+
+- name: Add audit rules for loin monitoring
+  ansible.builtin.copy:
+    dest: /etc/audit/rules.d/audit.rules
+    content: |
+      -w /var/log/lastlog -p wa -k logins
+      -w /var/run/faillock -p wa -k logins
+      -w /etc/passwd -p wa -k identity
+      -w /etc/sudoers -p wa -k sudoers
+    mode: '0640'
+  notify: restart auditd
