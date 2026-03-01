@@ -1,0 +1,31 @@
+---
+
+- name: Install cryptsetup
+  ansible.builtin.dnf:
+    name: cryptsetup
+    state: present
+
+- name: Encrypt disk with LUKS
+  community.crypto.luks_device:
+    device: /dev/sdb
+    state: present
+    passphrase: "SecureLabs123!"
+
+- name: Open LUKS volume
+  community.crypto.luks_device:
+    device: /dev/sdb
+    state: opened
+    name: secure_vol  
+    passphrase: "SecureLabs123!"
+
+- name: Create filesystem on LUKS volume
+  ansible.builtin.filesystem:
+    fstype: ext4
+    dev: /dev/mapper/secure_vol
+
+- name: Mount LUKS volume
+  ansible.builtin.mount:
+    path: /mnt/secure
+    src: /dev/mapper/secure_vol
+    fstype: ext4
+    state: mounted
